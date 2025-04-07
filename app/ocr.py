@@ -39,4 +39,3 @@ def extract_text_from_image_eng(image_path):
     return bidi_text  # This is the reshaped and properly displayed text
 
 
-print(extract_text_from_image("image3.png"))

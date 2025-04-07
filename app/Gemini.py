@@ -1,5 +1,6 @@
 import os
 import streamlit as st
+from dotenv import load_dotenv
 import sqlite3
 from openai import OpenAI
 import time
@@ -11,6 +12,7 @@ MAX_RETRIES = 3
 API_TIMEOUT = 30  # seconds
 SIMILARITY_THRESHOLD = 80  # Minimum similarity score (0-100)
 
+load_dotenv()
 # Initialize OpenRouter client
 def get_client():
     API_KEY = os.getenv("OPENROUTER_API_KEY")

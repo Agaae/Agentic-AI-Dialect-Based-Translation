@@ -7,6 +7,95 @@ import time
 from tenacity import retry, stop_after_attempt, wait_exponential
 from thefuzz import fuzz  # For fuzzy string matching
 from ocr import extract_text_from_image, extract_text_from_image_eng
+
+st.markdown("""
+    <style>
+    /* Page background and font */
+    html, body, .stApp {
+        background-color: #ffffff;
+        color: #000000;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    /* Text input area (main and extracted) */
+    textarea, .stTextArea textarea {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        border: 2px solid #000000 !important;
+        border-radius: 8px !important;
+        padding: 10px !important;
+        font-size: 16px !important;
+    }
+    
+    
+    
+
+    /* File uploader */
+    .stFileUploader {
+        background-color: #ffffff !important;
+        border: 2px dashed #000000 !important;
+        border-radius: 10px !important;
+        padding: 10px !important;
+    }
+
+    /* Radio buttons block */
+    .stRadio > div {
+        background-color: #ffffff !important;
+        border: 2px solid #ffffff !important;
+        border-radius: 10px !important;
+        padding: 15px !important;
+    }
+
+/* Style the text label of each radio button */
+label[data-baseweb="radio"] > div {
+    color: #000000 !important; /* Change to any visible color */
+    font-weight: 500; /* Optional: Make it bolder */
+}
+
+    /* Buttons */
+    .stButton button {
+        background-color: #ffffff;
+        color: #000000;
+        border: 2px solid #000000;
+        border-radius: 8px;
+        padding: 0.5em 1.5em;
+        font-weight: bold;
+        font-size: 16px;
+    }
+
+    .stButton button:hover {
+        background-color: #000000;
+        border-color: #ffffff;
+        color: #ffffff;
+    }
+
+    /* Translation output box */
+    .stMarkdown, .stWrite, .stSuccess, .stInfo, .stWarning, .stError {
+        border-radius: 8px;
+        padding: 12px;
+        background-color: #ffffff !important;
+        border: 2px solid #000000;
+    }
+
+    /* Translation caption */
+    .stCaption {
+        font-style: italic;
+        color: #000000;
+        margin-top: 0.5em;
+    }
+
+    /* Message boxes */
+    .stAlert {
+        border-radius: 8px;
+        padding: 1em;
+        font-weight: normal;
+        color: #FFFFFF;
+    }
+
+   
+    </style>
+""", unsafe_allow_html=True)
+
 # Configuration
 MAX_RETRIES = 3
 API_TIMEOUT = 30  # seconds

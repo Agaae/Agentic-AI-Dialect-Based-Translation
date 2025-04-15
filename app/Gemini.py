@@ -7,94 +7,95 @@ import time
 from tenacity import retry, stop_after_attempt, wait_exponential
 from thefuzz import fuzz  # For fuzzy string matching
 from ocr import extract_text_from_image, extract_text_from_image_eng
+from llama import get_lama_recommendations
 
-st.markdown("""
-    <style>
-    /* Page background and font */
-    html, body, .stApp {
-        background-color: #ffffff;
-        color: #000000;
-        font-family: 'Segoe UI', sans-serif;
-    }
+# st.markdown("""
+#     <style>
+#     /* Page background and font */
+#     html, body, .stApp {
+#         background-color: #ffffff;
+#         color: #000000;
+#         font-family: 'Segoe UI', sans-serif;
+#     }
 
-    /* Text input area (main and extracted) */
-    textarea, .stTextArea textarea {
-        background-color: #ffffff !important;
-        color: #000000 !important;
-        border: 2px solid #000000 !important;
-        border-radius: 8px !important;
-        padding: 10px !important;
-        font-size: 16px !important;
-    }
+#     /* Text input area (main and extracted) */
+#     textarea, .stTextArea textarea {
+#         background-color: #ffffff !important;
+#         color: #000000 !important;
+#         border: 2px solid #000000 !important;
+#         border-radius: 8px !important;
+#         padding: 10px !important;
+#         font-size: 16px !important;
+#     }
     
     
     
 
-    /* File uploader */
-    .stFileUploader {
-        background-color: #ffffff !important;
-        border: 2px dashed #000000 !important;
-        border-radius: 10px !important;
-        padding: 10px !important;
-    }
+#     /* File uploader */
+#     .stFileUploader {
+#         background-color: #ffffff !important;
+#         border: 2px dashed #000000 !important;
+#         border-radius: 10px !important;
+#         padding: 10px !important;
+#     }
 
-    /* Radio buttons block */
-    .stRadio > div {
-        background-color: #ffffff !important;
-        border: 2px solid #ffffff !important;
-        border-radius: 10px !important;
-        padding: 15px !important;
-    }
+#     /* Radio buttons block */
+#     .stRadio > div {
+#         background-color: #ffffff !important;
+#         border: 2px solid #ffffff !important;
+#         border-radius: 10px !important;
+#         padding: 15px !important;
+#     }
 
-/* Style the text label of each radio button */
-label[data-baseweb="radio"] > div {
-    color: #000000 !important; /* Change to any visible color */
-    font-weight: 500; /* Optional: Make it bolder */
-}
+# /* Style the text label of each radio button */
+# label[data-baseweb="radio"] > div {
+#     color: #000000 !important; /* Change to any visible color */
+#     font-weight: 500; /* Optional: Make it bolder */
+# }
 
-    /* Buttons */
-    .stButton button {
-        background-color: #ffffff;
-        color: #000000;
-        border: 2px solid #000000;
-        border-radius: 8px;
-        padding: 0.5em 1.5em;
-        font-weight: bold;
-        font-size: 16px;
-    }
+#     /* Buttons */
+#     .stButton button {
+#         background-color: #ffffff;
+#         color: #000000;
+#         border: 2px solid #000000;
+#         border-radius: 8px;
+#         padding: 0.5em 1.5em;
+#         font-weight: bold;
+#         font-size: 16px;
+#     }
 
-    .stButton button:hover {
-        background-color: #000000;
-        border-color: #ffffff;
-        color: #ffffff;
-    }
+#     .stButton button:hover {
+#         background-color: #000000;
+#         border-color: #ffffff;
+#         color: #ffffff;
+#     }
 
-    /* Translation output box */
-    .stMarkdown, .stWrite, .stSuccess, .stInfo, .stWarning, .stError {
-        border-radius: 8px;
-        padding: 12px;
-        background-color: #ffffff !important;
-        border: 2px solid #000000;
-    }
+#     /* Translation output box */
+#     .stMarkdown, .stWrite, .stSuccess, .stInfo, .stWarning, .stError {
+#         border-radius: 8px;
+#         padding: 12px;
+#         background-color: #ffffff !important;
+#         border: 2px solid #000000;
+#     }
 
-    /* Translation caption */
-    .stCaption {
-        font-style: italic;
-        color: #000000;
-        margin-top: 0.5em;
-    }
+#     /* Translation caption */
+#     .stCaption {
+#         font-style: italic;
+#         color: #000000;
+#         margin-top: 0.5em;
+#     }
 
-    /* Message boxes */
-    .stAlert {
-        border-radius: 8px;
-        padding: 1em;
-        font-weight: normal;
-        color: #FFFFFF;
-    }
+#     /* Message boxes */
+#     .stAlert {
+#         border-radius: 8px;
+#         padding: 1em;
+#         font-weight: normal;
+#         color: #FFFFFF;
+#     }
 
    
-    </style>
-""", unsafe_allow_html=True)
+#     </style>
+# """, unsafe_allow_html=True)
 
 # Configuration
 MAX_RETRIES = 3
@@ -252,7 +253,6 @@ def translate_text(text, source_lang):
 # Initialize database
 init_db()
 
-
 # Streamlit UI
 st.title("Egyptian Arabic ↔ English Translator")
 
@@ -294,7 +294,16 @@ if translation_method == "Text Input":
                         st.info(f"⚠️ Used similar match ({confidence}% confidence)")
 
                     st.caption(f"Translation took {time.time() - start_time:.2f} seconds")
-                
+                    
+                    # Fetch and display Llama recommendations
+                    llama_recommendations = get_lama_recommendations(user_input)  # Pass user input or relevant context
+                    
+                    if llama_recommendations:
+                        st.subheader("Llama Recommendations:")
+                        st.write(llama_recommendations)
+                    else:
+                        st.info("No Llama recommendations found.")
+
                 except Exception as e:
                     st.error(f"Translation failed: {str(e)}")
 
@@ -341,6 +350,15 @@ elif translation_method == "Upload Image":
                             st.info(f"⚠️ Used similar match ({confidence}% confidence)")
 
                         st.caption(f"Translation took {time.time() - start_time:.2f} seconds")
+
+                        # Fetch and display Llama recommendations
+                        llama_recommendations = get_lama_recommendations(extracted_text)  # Pass extracted text for recommendations
+                        
+                        if llama_recommendations:
+                            st.subheader("Llama Recommendations:")
+                            st.write(llama_recommendations)
+                        else:
+                            st.info("No Llama recommendations found.")
 
                     else:
                         st.warning("No text found in the image.")

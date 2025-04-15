@@ -254,11 +254,22 @@ def translate_text(text, source_lang):
 init_db()
 
 # Streamlit UI
+import time
+import streamlit as st
+
+import time
+import streamlit as st
+
+# Streamlit UI
 st.title("Egyptian Arabic ↔ English Translator")
 
 # Option to choose between text or image upload
 translation_method = st.radio("Choose Translation Method:", ("Text Input", "Upload Image"))
 
+# Initialize conversation log for recommendations
+conversation_log = []
+
+# Normal Translation Flow
 if translation_method == "Text Input":
     user_input = st.text_area("Enter text to translate:", height=100)
 
@@ -269,40 +280,49 @@ if translation_method == "Text Input":
             with st.spinner("Translating..."):
                 try:
                     start_time = time.time()
-                    
+
                     # Detect language
                     source_lang = detect_language(user_input)
-                    
+
                     # Check cache with fuzzy matching
                     translation, confidence = get_translation(user_input, source_lang)
-                    
+
                     if not translation:
                         # Call API if no match found
                         translation = translate_text(user_input, source_lang)
                         confidence = 100  # New translations get 100% confidence
-                        
+
                         # Store in database
                         store_translation(
                             user_input if source_lang == 'english' else translation,
                             translation if source_lang == 'english' else user_input
                         )
-                    
+
                     st.success(f"Translation ({'Arabic → English' if source_lang == 'egyptian' else 'English → Arabic'}):")
                     st.write(translation)
-                    
+
                     if confidence < 100:
                         st.info(f"⚠️ Used similar match ({confidence}% confidence)")
 
                     st.caption(f"Translation took {time.time() - start_time:.2f} seconds")
-                    
-                    # Fetch and display Llama recommendations
-                    llama_recommendations = get_lama_recommendations(user_input)  # Pass user input or relevant context
-                    
+
+                    # Fetch and display Llama recommendations based on the user input
+                    llama_recommendations = get_lama_recommendations([user_input])
+                    conversation_log.append(f"User: {user_input}")
+
                     if llama_recommendations:
                         st.subheader("Llama Recommendations:")
                         st.write(llama_recommendations)
+                        conversation_log.append(f"Llama: {llama_recommendations}")
                     else:
                         st.info("No Llama recommendations found.")
+
+                    # Option to continue the conversation with Llama about the recommendations
+                    if st.button("Continue Conversation"):
+                        # Transition to a new section where the user can ask follow-up questions
+                        st.session_state.continue_conversation = True
+                        st.session_state.previous_recommendations = llama_recommendations
+                        st.write("Now you can ask more questions related to the recommendations.")
 
                 except Exception as e:
                     st.error(f"Translation failed: {str(e)}")
@@ -352,16 +372,49 @@ elif translation_method == "Upload Image":
                         st.caption(f"Translation took {time.time() - start_time:.2f} seconds")
 
                         # Fetch and display Llama recommendations
-                        llama_recommendations = get_lama_recommendations(extracted_text)  # Pass extracted text for recommendations
-                        
+                        llama_recommendations = get_lama_recommendations([extracted_text])
+                        conversation_log.append(f"User: {extracted_text}")
+
                         if llama_recommendations:
                             st.subheader("Llama Recommendations:")
                             st.write(llama_recommendations)
+                            conversation_log.append(f"Llama: {llama_recommendations}")
                         else:
                             st.info("No Llama recommendations found.")
+
+                        # Option to continue the conversation with Llama about the recommendations
+                        if st.button("Continue Conversation"):
+                            # Transition to a new section where the user can ask follow-up questions
+                            st.session_state.continue_conversation = True
+                            st.session_state.previous_recommendations = llama_recommendations
+                            st.write("Now you can ask more questions related to the recommendations.")
 
                     else:
                         st.warning("No text found in the image.")
 
                 except Exception as e:
                     st.error(f"Error during text extraction: {str(e)}")
+
+# New section to continue conversation with Llama about recommendations
+if st.session_state.get("continue_conversation", False):
+    st.title("Continue Conversation with Llama")
+
+    previous_recommendations = st.session_state.get("previous_recommendations", "")
+
+    if previous_recommendations:
+        st.subheader("Previous Recommendations from Llama:")
+        st.write(previous_recommendations)
+
+    user_question = st.text_input("Ask Llama a follow-up question:")
+
+    if user_question:
+        # Add the new question to the conversation log and ask Llama
+        conversation_log.append(f"User: {user_question}")
+        llama_reply = get_lama_recommendations(conversation_log)
+        st.write(f"Llama: {llama_reply}")
+        conversation_log.append(f"Llama: {llama_reply}")
+
+    # Option to return to the main translation section
+    if st.button("Return to Translation"):
+        st.session_state.continue_conversation = False
+        st.write("You can now go back to translating and receiving recommendations.")

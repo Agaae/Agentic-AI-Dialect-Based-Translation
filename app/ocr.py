@@ -2,9 +2,11 @@ import pytesseract
 from PIL import Image
 import arabic_reshaper
 from bidi.algorithm import get_display
-
 # Set Tesseract path
 pytesseract.pytesseract.tesseract_cmd = r"C:\Users\ahmed\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"
+
+
+
 
 def extract_text_from_image(image_path):
     # Load image

@@ -2,7 +2,9 @@ import sounddevice as sd
 from scipy.io.wavfile import write
 import assemblyai as aai
 import os
+from dotenv import load_dotenv
 
+load_dotenv()
 # === 1. Record Audio ===
 def record_audio(filename="audio.wav", duration=5, fs=16000):
     print(f"🎙️ Recording for {duration} seconds...")
@@ -13,14 +15,14 @@ def record_audio(filename="audio.wav", duration=5, fs=16000):
 
 # === 2. Transcribe with AssemblyAI ===
 def transcribe_audio(file_path):
-    aai.settings.api_key = "973f4d0c5020407988eb9ca4d290d0eb"  # Replace with your actual key
+    aai.settings.api_key =os.getenv("ASSEMBLY_API_KEY") # Replace with your actual key
 
     if not os.path.exists(file_path):
         raise FileNotFoundError("Audio file not found")
 
     config = aai.TranscriptionConfig(
         speech_model=aai.SpeechModel.nano,     # ✅ Use the nano model
-        language_code="en"                     # ✅ Force Arabic language
+        language_code="en"                    
     )
 
     transcriber = aai.Transcriber(config=config)
@@ -31,6 +33,7 @@ def transcribe_audio(file_path):
     
     print("\n📝 Transcribed Arabic Text:")
     print(transcript.text)
+    return transcript.text
 
 # === 3. Run the flow ===
 if __name__ == "__main__":

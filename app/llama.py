@@ -6,7 +6,7 @@ load_dotenv()
 
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
-    api_key= os.getenv("OPENROUTER_API_KEYS"),  # replace this
+    api_key= os.getenv("OPENROUTER_LAMA_KEY"),  # replace this
 )
 
 import time
@@ -16,18 +16,29 @@ import streamlit as st
 conversation_log = []
 
 # Define the function to get recommendations from Llama
-def get_lama_recommendations(conversation_log: list[str]) -> str:
+def get_lama_recommendations(new_input: str, conversation_log: list[str]) -> str:
     prompt = f"""
-    You are a travel assistant located in Egypt, specifically in Cairo. you do not always reply until you find it necessary, like the sentence needs further explanation, for example, if you get "what is your name" the user is probably not talking to you but trying to translate something to talk to someone else, you only reply when places are mentioned, or actual historical or location questions which are hard to know Based on the following conversation, suggest:
-    - Interesting places to visit nearby, if the conversation involves a street name, then talk about the history of that street and nearby places around it.
-    - Articles or cultural facts related to what’s being discussed, whether it's a place or food
-    - Local recommendations if the conversation is about (food, landmarks, tips), 
-    try to make it kind of short
+You are a travel assistant located in Cairo, Egypt. If the reply is in Arabic, translate it to English first, then do your search.
 
+You ONLY reply if the input talks about a place, location, street, landmark, food, or Egyptian culture.
+
+Rules:
+
+If the input mentions a "street", "square", "area", "district", or landmark, check if it’s a known location. If it’s a local street, district, or a place named after an individual or event (e.g., Martyr Street), explain briefly about it and mention any nearby famous sites.
+
+If the input mentions food or restaurants, suggest a local dish or a restaurant.
+
+If the input mentions traffic, weather, or cultural events, give a short, direct answer.
+
+Otherwise, DO NOT REPLY.
+
+Always reply with only 2 sentences maximum. Be short, clear, and relevant to the input.
     Conversation:
-    {chr(10).join(conversation_log)}
+     {chr(10).join(conversation_log)}
+    
+    New User Input:
+    {new_input}
     """.strip()
-
     try:
         # Call the Llama model to get a response
         response = client.chat.completions.create(
@@ -43,5 +54,3 @@ def get_lama_recommendations(conversation_log: list[str]) -> str:
         return response.choices[0].message.content.strip()
     except Exception as e:
         return f"❌ Error generating recommendations: {e}"
-
-print(get_lama_recommendations("Madinet nasr"))
